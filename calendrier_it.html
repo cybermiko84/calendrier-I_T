@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendrier IT — Échéances CODIR</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --text: #1A1A1A;
+    --text-muted: #6B6B6B;
+    --border: #E8E4DF;
+    --accent: #2D5A27;
+    --bilans: #C05621;
+    --budget: #2563EB;
+    --powerbi: #7C3AED;
+    --cyber: #DC2626;
+    --editions: #0D9488;
+    --bilans-bg: #FFF7ED;
+    --budget-bg: #EFF6FF;
+    --powerbi-bg: #F5F3FF;
+    --cyber-bg: #FEF2F2;
+    --editions-bg: #F0FDFA;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+    color: white;
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(45,90,39,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  .header p {
+    font-size: 1rem;
+    opacity: 0.65;
+    font-weight: 400;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 40px 60px;
+  }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+
+  .filter-btn {
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+  }
+
+  .filter-btn:hover { border-color: #AAA; }
+  .filter-btn.active { background: var(--text); color: white; border-color: var(--text); }
+
+  .filter-btn[data-domain="Bilans"].active { background: var(--bilans); border-color: var(--bilans); }
+  .filter-btn[data-domain="Budget"].active { background: var(--budget); border-color: var(--budget); }
+  .filter-btn[data-domain="Power BI"].active { background: var(--powerbi); border-color: var(--powerbi); }
+  .filter-btn[data-domain="cybersécurité"].active { background: var(--cyber); border-color: var(--cyber); }
+  .filter-btn[data-domain="Editions fin d'année"].active { background: var(--editions); border-color: var(--editions); }
+
+  /* View toggle */
+  .view-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .view-toggle {
+    display: flex;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .view-toggle button {
+    border: none;
+    background: none;
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+
+  .view-toggle button.active {
+    background: var(--text);
+    color: white;
+  }
+
+  .stats {
+    display: flex;
+    gap: 24px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Timeline view */
+  .timeline { display: block; }
+
+  .month-group {
+    margin-bottom: 36px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .month-header {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .month-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: var(--shadow);
+    transition: all 0.25s;
+    cursor: default;
+  }
+
+  .task-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .task-date {
+    min-width: 56px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .task-date .day {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .task-date .weekday {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+
+  .task-date-recurring {
+    min-width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #F3F4F6;
+  }
+
+  .task-date-recurring svg {
+    width: 22px;
+    height: 22px;
+    color: var(--text-muted);
+  }
+
+  .task-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .task-info {
+    flex: 1;
+  }
+
+  .task-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+
+  .task-meta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .domain-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .domain-Bilans { background: var(--bilans-bg); color: var(--bilans); }
+  .domain-Budget { background: var(--budget-bg); color: var(--budget); }
+  .domain-PowerBI { background: var(--powerbi-bg); color: var(--powerbi); }
+  .domain-cyber { background: var(--cyber-bg); color: var(--cyber); }
+  .domain-editions { background: var(--editions-bg); color: var(--editions); }
+
+  /* Calendar grid view */
+  .calendar-view { display: none; }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .cal-month {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.25s;
+    min-height: 140px;
+  }
+
+  .cal-month:hover { box-shadow: var(--shadow-lg); }
+
+  .cal-month-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .cal-month.has-tasks .cal-month-name { color: var(--text); }
+
+  .cal-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    background: #F9F9F7;
+    border-left: 3px solid var(--border);
+  }
+
+  .cal-task.domain-Bilans { border-left-color: var(--bilans); background: var(--bilans-bg); }
+  .cal-task.domain-Budget { border-left-color: var(--budget); background: var(--budget-bg); }
+  .cal-task.domain-PowerBI { border-left-color: var(--powerbi); background: var(--powerbi-bg); }
+  .cal-task.domain-cyber { border-left-color: var(--cyber); background: var(--cyber-bg); }
+  .cal-task.domain-editions { border-left-color: var(--editions); background: var(--editions-bg); }
+
+  .cal-task-date {
+    font-weight: 700;
+    min-width: 22px;
+    flex-shrink: 0;
+  }
+
+  .cal-no-tasks {
+    font-size: 0.8rem;
+    color: #C8C8C8;
+    font-style: italic;
+  }
+
+  /* Recurring section */
+  .recurring-section {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 2px solid var(--border);
+  }
+
+  .recurring-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .recurring-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Alert for upcoming */
+  .task-card.upcoming {
+    border-left: 4px solid #F59E0B;
+  }
+
+  .task-card.overdue {
+    border-left: 4px solid #DC2626;
+  }
+
+  .urgency-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: none;
+  }
+
+  .task-card.upcoming .urgency-dot { display: block; background: #F59E0B; }
+  .task-card.overdue .urgency-dot { display: block; background: #DC2626; animation: pulse 1.5s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 900px) {
+    .cal-grid { grid-template-columns: repeat(2, 1fr); }
+    .header { padding: 32px 20px; }
+    .container { padding: 24px 20px 40px; }
+  }
+
+  @media (max-width: 600px) {
+    .cal-grid { grid-template-columns: 1fr; }
+    .stats { gap: 14px; }
+    .filters { gap: 6px; }
+  }
+
+  @media print {
+    body { background: white; }
+    .filters, .view-controls { display: none !important; }
+    .task-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-content">
+    <h1>Calendrier IT — Échéances 2026</h1>
+    <p>Vue d'ensemble des tâches IT pour le CODIR</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="filters">
+    <span class="filter-label">Filtrer :</span>
+    <button class="filter-btn active" data-domain="all">Tout</button>
+    <button class="filter-btn" data-domain="Bilans">Bilans</button>
+    <button class="filter-btn" data-domain="Budget">Budget</button>
+    <button class="filter-btn" data-domain="Power BI">Power BI</button>
+    <button class="filter-btn" data-domain="cybersécurité">Cybersécurité</button>
+    <button class="filter-btn" data-domain="Editions fin d'année">Éditions fin d'année</button>
+  </div>
+
+  <div class="view-controls">
+    <div class="view-toggle">
+      <button class="active" data-view="timeline">Chronologie</button>
+      <button data-view="calendar">Calendrier</button>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num" id="count-total">13</div>
+        <div class="stat-label">Échéances</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="count-domains">5</div>
+        <div class="stat-label">Domaines</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> Sous 30 jours</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#DC2626"></div> Échéance dépassée</div>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+  <div class="calendar-view" id="calendarView"></div>
+</div>
+
+<script>
+const TASKS = [
+  { title: "Importation des données Silae dans le Power BI RH", date: new Date(2026, 0, 15), domain: "Power BI", recurring: false },
+  { title: "Tableau comparatif des bilans dans Therefore avec la liste des envois EDI", date: new Date(2026, 3, 30), domain: "Bilans", recurring: false },
+  { title: "Tableau comparatif des bilans dans Therefore avec la liste des envois EDI", date: new Date(2026, 4, 14), domain: "Bilans", recurring: false },
+  { title: "Extraction des temps Cegid pour budget", date: new Date(2026, 6, 15), domain: "Budget", recurring: false },
+  { title: "Envoi des extractions budget individuels par salarié", date: new Date(2026, 6, 20), domain: "Budget", recurring: false },
+  { title: "Construction du tableau global pour les budgets", date: new Date(2026, 8, 15), domain: "Budget", recurring: false },
+  { title: "Importation du budget consolidé dans le Power BI RH", date: new Date(2026, 8, 30), domain: "Power BI", recurring: false },
+  { title: "Extraction des temps et facturation fin d'année", date: new Date(2026, 11, 15), domain: "Editions fin d'année", recurring: false },
+  { title: "Mise en page et diffusion des éditions de fin d'année", date: new Date(2026, 11, 22), domain: "Editions fin d'année", recurring: false },
+  { title: "Création des fichiers Excel pour les intéressements associés", date: new Date(2026, 11, 24), domain: "Editions fin d'année", recurring: false },
+  { title: "Importation des données Cegid dans Power BI", date: null, domain: "Power BI", recurring: true, frequency: "Tous les 15 du mois" },
+  { title: "Importation des données Kelio dans Power BI", date: null, domain: "Power BI", recurring: true, frequency: "Tous les 15 du mois" },
+  { title: "Tests de phishing", date: null, domain: "cybersécurité", recurring: true, frequency: "Tous les 4 mois" },
+];
+
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const DAYS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const TODAY = new Date();
+
+function domainClass(domain) {
+  if (domain === 'Bilans') return 'domain-Bilans';
+  if (domain === 'Budget') return 'domain-Budget';
+  if (domain === 'Power BI') return 'domain-PowerBI';
+  if (domain === 'cybersécurité') return 'domain-cyber';
+  if (domain === "Editions fin d'année") return 'domain-editions';
+  return '';
+}
+
+function getUrgency(date) {
+  if (!date) return '';
+  const diff = (date - TODAY) / (1000*60*60*24);
+  if (diff < 0) return 'overdue';
+  if (diff <= 30) return 'upcoming';
+  return '';
+}
+
+let activeFilter = 'all';
+
+function filteredTasks() {
+  return TASKS.filter(t => activeFilter === 'all' || t.domain === activeFilter);
+}
+
+function renderTimeline() {
+  const el = document.getElementById('timeline');
+  const tasks = filteredTasks();
+  const fixed = tasks.filter(t => !t.recurring).sort((a,b) => a.date - b.date);
+  const recurring = tasks.filter(t => t.recurring);
+
+  // Group by month
+  const groups = {};
+  fixed.forEach(t => {
+    const key = t.date.getFullYear() + '-' + String(t.date.getMonth()).padStart(2,'0');
+    if (!groups[key]) groups[key] = { month: t.date.getMonth(), year: t.date.getFullYear(), tasks: [] };
+    groups[key].tasks.push(t);
+  });
+
+  let html = '';
+  Object.keys(groups).sort().forEach((key, i) => {
+    const g = groups[key];
+    html += `<div class="month-group" style="animation-delay:${i*0.06}s">`;
+    html += `<div class="month-header">${MONTHS_FR[g.month]} ${g.year}</div>`;
+    g.tasks.forEach(t => {
+      const urgency = getUrgency(t.date);
+      html += `<div class="task-card ${urgency}">
+        <div class="task-date">
+          <div class="day">${t.date.getDate()}</div>
+          <div class="weekday">${DAYS_FR[t.date.getDay()]}</div>
+        </div>
+        <div class="task-divider"></div>
+        <div class="urgency-dot"></div>
+        <div class="task-info">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">${DAYS_FR[t.date.getDay()]} ${t.date.getDate()} ${MONTHS_FR[t.date.getMonth()]} ${t.date.getFullYear()}</div>
+        </div>
+        <span class="domain-badge ${domainClass(t.domain)}">${t.domain}</span>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  if (recurring.length > 0) {
+    html += `<div class="recurring-section"><div class="recurring-title">Tâches récurrentes</div>`;
+    recurring.forEach(t => {
+      html += `<div class="task-card">
+        <div class="task-date-recurring">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">${t.frequency}</div>
+        </div>
+        <span class="domain-badge ${domainClass(t.domain)}">${t.domain}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (tasks.length === 0) {
+    html = '<div class="empty-state">Aucune échéance pour ce filtre.</div>';
+  }
+
+  el.innerHTML = html;
+  document.getElementById('count-total').textContent = tasks.length;
+}
+
+function renderCalendar() {
+  const el = document.getElementById('calendarView');
+  const tasks = filteredTasks().filter(t => !t.recurring).sort((a,b) => a.date - b.date);
+  const recurring = filteredTasks().filter(t => t.recurring);
+
+  let html = '<div class="cal-grid">';
+  for (let m = 0; m < 12; m++) {
+    const monthTasks = tasks.filter(t => t.date.getMonth() === m);
+    const hasTasks = monthTasks.length > 0;
+    html += `<div class="cal-month ${hasTasks ? 'has-tasks' : ''}">`;
+    html += `<div class="cal-month-name">${MONTHS_FR[m]}</div>`;
+    if (monthTasks.length === 0) {
+      html += `<div class="cal-no-tasks">—</div>`;
+    } else {
+      monthTasks.forEach(t => {
+        html += `<div class="cal-task ${domainClass(t.domain)}">
+          <span class="cal-task-date">${t.date.getDate()}</span>
+          <span>${t.title}</span>
+        </div>`;
+      });
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  if (recurring.length > 0) {
+    html += `<div class="recurring-section"><div class="recurring-title">Tâches récurrentes</div>`;
+    recurring.forEach(t => {
+      html += `<div class="task-card">
+        <div class="task-date-recurring">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">${t.frequency}</div>
+        </div>
+        <span class="domain-badge ${domainClass(t.domain)}">${t.domain}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.domain;
+    renderTimeline();
+    renderCalendar();
+  });
+});
+
+// View toggle
+document.querySelectorAll('.view-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const view = btn.dataset.view;
+    document.getElementById('timeline').style.display = view === 'timeline' ? 'block' : 'none';
+    document.getElementById('calendarView').style.display = view === 'calendar' ? 'block' : 'none';
+  });
+});
+
+// Init
+renderTimeline();
+renderCalendar();
+</script>
+</body>
+</html>
